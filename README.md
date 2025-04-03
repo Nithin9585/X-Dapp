@@ -22,8 +22,7 @@ The smart contract is deployed on the **Sepolia Testnet** for testing purposes.
 
 ### **Wallet Integration:**
 - MetaMask
-- Web3.js / ethers.js
-
+- Web3.js 
 ## 🎯 Getting Started
 1. Clone the repository:
    ```sh
