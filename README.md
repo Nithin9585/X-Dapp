@@ -16,7 +16,6 @@ The smart contract is deployed on the **Sepolia Testnet** for testing purposes.
 ### **Frontend:**
 - React.js
 - ethers.js
-- Lucide-React (icons)
 
 ### **Backend:**
 - Ethereum Smart Contracts (Solidity)
