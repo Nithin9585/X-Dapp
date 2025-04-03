@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Heart, Loader } from "lucide-react";
 import { getEthereumContract } from "./config";
 import { ethers } from "ethers";
-import Spline from '@splinetool/react-spline';
+import Spline from "@splinetool/react-spline";
 import "./App.css";
 
 function App() {
@@ -19,8 +19,28 @@ function App() {
     checkWalletConnection();
   }, []);
 
+  const connectWallet = async () => {
+    if (!window.ethereum) {
+      alert("MetaMask or a compatible wallet is required.");
+      return;
+    }
+    try {
+      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+      if (accounts.length > 0) {
+        setIsWalletConnected(true);
+        setUserAddress(accounts[0]);
+        fetchTweets();
+      }
+    } catch (error) {
+      console.error("Wallet connection failed:", error);
+    }
+  };
+
   const checkWalletConnection = async () => {
-    if (!window.ethereum) return;
+    if (!window.ethereum) {
+      console.warn("No Ethereum wallet detected.");
+      return;
+    }
     try {
       const accounts = await window.ethereum.request({ method: "eth_accounts" });
       if (accounts.length > 0) {
@@ -28,7 +48,9 @@ function App() {
         setUserAddress(accounts[0]);
         fetchTweets();
       }
-    } catch (error) {}
+    } catch (error) {
+      console.error("Error checking wallet connection:", error);
+    }
   };
 
   const fetchTweets = async () => {
@@ -40,7 +62,6 @@ function App() {
       const userAddress = await signer.getAddress();
       if (!userAddress) return;
       const tweets = await contract.getTweets(userAddress);
-      const likedStatuses = {};
       const parsedTweets = tweets.map((tweet) => ({
         id: Number(tweet[0]),
         author: tweet[1],
@@ -49,8 +70,8 @@ function App() {
         likes: Number(tweet[4]),
       }));
       setTweets(parsedTweets);
-      setLikedTweets(likedStatuses);
     } catch (error) {
+      console.error("Error fetching tweets:", error);
     } finally {
       setIsLoading(false);
     }
@@ -65,8 +86,9 @@ function App() {
       await tx.wait();
       setLikedTweets((prev) => ({ ...prev, [tweetId]: true }));
       fetchTweets();
-    } catch (error) {} 
-    finally {
+    } catch (error) {
+      console.error("Error liking tweet:", error);
+    } finally {
       setLoadingLikes((prev) => ({ ...prev, [tweetId]: false }));
     }
   };
@@ -80,8 +102,9 @@ function App() {
       await tx.wait();
       setLikedTweets((prev) => ({ ...prev, [tweetId]: false }));
       fetchTweets();
-    } catch (error) {} 
-    finally {
+    } catch (error) {
+      console.error("Error unliking tweet:", error);
+    } finally {
       setLoadingLikes((prev) => ({ ...prev, [tweetId]: false }));
     }
   };
@@ -99,8 +122,9 @@ function App() {
       await tx.wait();
       setTweetText("");
       fetchTweets();
-    } catch (error) {} 
-    finally {
+    } catch (error) {
+      console.error("Error posting tweet:", error);
+    } finally {
       setTweeting(false);
     }
   };
@@ -118,7 +142,7 @@ function App() {
         <div className="wallet-section">
           <h2>Welcome to X Decentralized App</h2>
           {!isWalletConnected ? (
-            <button className="wallet-connect-btn" onClick={checkWalletConnection}>
+            <button className="wallet-connect-btn" onClick={connectWallet}>
               Connect Wallet
             </button>
           ) : (
@@ -148,34 +172,34 @@ function App() {
                 <p className="tweet-content">{tweet.content}</p>
                 <div className="tweet-footer">
                   <div className="tweet-actions">
-                  <button
-  className="like-btn"
-  onClick={() =>
-    likedTweets[tweet.id]
-      ? handleUnlike(tweet.author, tweet.id)
-      : handleLike(tweet.author, tweet.id)
-  }
-  disabled={loadingLikes[tweet.id]}
->
-  {loadingLikes[tweet.id] ? (
-    <Loader className="spinner" />
-  ) : (
-    <div className="like-container">
-      <Heart
-        className="heart-icon"
-        fill={likedTweets[tweet.id] ? "#ff69b4" : "none"} 
-        stroke={likedTweets[tweet.id] ? "#ff69b4" : "#ff69b4"} 
-        strokeWidth="2"
-      />
-      <span className="like-count">{tweet.likes}</span>
-    </div>
-  )}
-</button>
-
-
+                    <button
+                      className="like-btn"
+                      onClick={() =>
+                        likedTweets[tweet.id]
+                          ? handleUnlike(tweet.author, tweet.id)
+                          : handleLike(tweet.author, tweet.id)
+                      }
+                      disabled={loadingLikes[tweet.id]}
+                    >
+                      {loadingLikes[tweet.id] ? (
+                        <Loader className="spinner" />
+                      ) : (
+                        <div className="like-container">
+                          <Heart
+                            className="heart-icon"
+                            fill={likedTweets[tweet.id] ? "#ff69b4" : "none"}
+                            stroke={likedTweets[tweet.id] ? "#ff69b4" : "#ff69b4"}
+                            strokeWidth="2"
+                          />
+                          <span className="like-count">{tweet.likes}</span>
+                        </div>
+                      )}
+                    </button>
                   </div>
                   <div className="timestamp-container">
-                    <span className="tweet-timestamp">{new Date(tweet.timestamp * 1000).toLocaleString()}</span>
+                    <span className="tweet-timestamp">
+                      {new Date(tweet.timestamp * 1000).toLocaleString()}
+                    </span>
                   </div>
                 </div>
               </div>
